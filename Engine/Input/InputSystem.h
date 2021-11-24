@@ -46,7 +46,7 @@ namespace jc
 		std::vector<Uint8> prevKeyboardState; 
 		int numKeys;
 
-		glm::vec2 mousePosition;//
+		glm::vec2 mousePosition;
 		std::array<Uint8,3> mouseButtonState;
 		std::array<Uint8, 3> prevMouseButtonState;
 	};

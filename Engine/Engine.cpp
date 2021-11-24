@@ -16,7 +16,12 @@ namespace jc
 		std::for_each(systems.begin(), systems.end(), [](auto& system) {system->Startup(); });
 		
 		REDISTER_CLASS(Actor)
-		
+		REDISTER_CLASS(CameraComponent)
+		REDISTER_CLASS(MeshComponent)
+		REDISTER_CLASS(physicsComponent)
+		REDISTER_CLASS(AudioComponent)
+
+
 	}
 
 	void Engine::Shutdown()

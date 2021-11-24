@@ -12,14 +12,13 @@ namespace jc
 	class Engine;
 	//class Renderer;
 
-	
 	class Scene : public Object,public ISerializable
 	{
 	public:
 		void Update(float dt);
 		void Draw(class Renderer* renderer); //can do the class here 
 
-		void Addactor(std::unique_ptr<Actor> actor);
+		void AddActor(std::unique_ptr<Actor> actor);
 		void RemoveActor(Actor* actor);
 		void RemoveAllActors();
 

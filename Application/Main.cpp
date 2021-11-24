@@ -1,3 +1,4 @@
+#include "Engine.h"
 #include <glad\glad.h>
 #include <sdl.h>
 #include <iostream>
@@ -7,148 +8,113 @@
 // vertices
 const float vertices[] =
 {
-	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+	// front
+	-1.0f, -1.0f,  1.0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	 1.0f, -1.0f,  1.0, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+	-1.0f,  1.0f,  1.0, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+	// back
+	-1.0f, -1.0f, -1.0, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+	 1.0f, -1.0f, -1.0, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+	 1.0f,  1.0f, -1.0, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+	-1.0f,  1.0f, -1.0, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f
 };
-
-// vertex shader
-const char* vertexSource = R"(
-    #version 430 core 
-    layout(location = 0) in vec3 position;
-    layout(location = 1) in vec3 color;
-
-	out vec3 fs_color;
-	
-	uniform float scale;
-
-    void main()
-    {
-        gl_Position = vec4(position * scale, 1.0);
-		fs_color = color;
-    }
-)";
-
-// fragment
-const char* fragmentSource = R"(
-    #version 430 core
-	in vec3 fs_color;
-	
-    out vec4 outColor;
- 
-	uniform vec3 tint;
-    void main()
-    {
-        outColor = vec4(fs_color, 1.0) * vec4(tint,1.0);
-    }
-)";
+const GLuint indices[] =
+{
+	// front
+	0, 1, 2,
+	2, 3, 0,
+	// right
+	1, 5, 6,
+	6, 2, 1,
+	// back
+	7, 6, 5,
+	5, 4, 7,
+	// left
+	4, 0, 3,
+	3, 7, 4,
+	// bottom
+	4, 5, 1,
+	1, 0, 4,
+	// top
+	3, 2, 6,
+	6, 7, 3
+};
 
 int main(int argc, char** argv)
 {
-	int result = SDL_Init(SDL_INIT_VIDEO);
-	if (result != 0)
+	jc::Engine engine;
+	engine.Startup();
+	engine.Get<jc::Renderer>()->Create("OpenGL", 800, 600);
+
+	// create scene
+	std::unique_ptr<jc::Scene> scene = std::make_unique<jc::Scene>();
+	scene->engine = &engine;
+
+	jc::SeedRandom(static_cast<unsigned int>(time(nullptr)));
+	jc::SetFilePath("../resources");
+
+	//create sharders
+	std::shared_ptr<jc::Program> program = engine.Get<jc::ResourceSystem>()->Get<jc::Program>("basic_shader");
+	std::shared_ptr<jc::Shader> vshader = engine.Get<jc::ResourceSystem>()->Get<jc::Shader>("shaders/basic.vert", (void*)GL_VERTEX_SHADER);
+	std::shared_ptr<jc::Shader> fshader = engine.Get<jc::ResourceSystem>()->Get<jc::Shader>("shaders/basic.frag", (void*)GL_FRAGMENT_SHADER);
+	program->AddShader(vshader);
+	program->AddShader(fshader);
+	program->Link();
+	program->Use();
+
+	//vertex buffer
+	std::shared_ptr<jc::VertexIndexBuffer> vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexIndexBuffer>("cube_mesh");
+	vertexBuffer->CreateVertexBuffer(sizeof(vertices), 8, (void*)vertices);
+	vertexBuffer->CreateIndexBuffer(GL_UNSIGNED_INT, 36, (void*)indices);
+	vertexBuffer->SetAttribute(0, 3, 8* sizeof(GL_FLOAT), 0);
+	vertexBuffer->SetAttribute(1, 3, 8 * sizeof(GL_FLOAT), 3 * sizeof(float));
+	vertexBuffer->SetAttribute(2, 2, 8 * sizeof(float), 6 * sizeof(float));
+
+	// uv
+	/*glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);*/
+
+	
+	//texture
+	auto texture = engine.Get<jc::ResourceSystem>()->Get<jc::Texture>("textures/llama.png");
+	texture->Bind();
+
+	texture = engine.Get<jc::ResourceSystem>()->Get<jc::Texture>("textures/rocks.bmp");
+	texture->Bind();
+
+	texture = engine.Get<jc::ResourceSystem>()->Get<jc::Texture>("textures/wood.png");
+	texture->Bind();
+
+	// create camera
 	{
-		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+		auto actor = jc::ObjectFactory::Instance().Create<jc::Actor>("Actor");
+		actor->name = "camera";
+		actor->transform.position = glm::vec3{ 0, 0, 10 };
+
+		auto component = jc::ObjectFactory::Instance().Create<jc::CameraComponent>("CameraComponent");
+		component->SetPerspective(45.0f, 800.0f / 600.0f, 0.01f, 100.0f);
+
+		actor->AddComponent(std::move(component));
+		scene->AddActor(std::move(actor));
 	}
 
-	SDL_Window* window = SDL_CreateWindow("OpenGL", 100, 100, 800, 600, SDL_WINDOW_OPENGL);
-	if (window == nullptr)
+	// create cube
 	{
-		SDL_Log("Failed to create window: %s", SDL_GetError());
+		auto actor = jc::ObjectFactory::Instance().Create<jc::Actor>("Actor");
+		actor->name = "cube";
+		actor->transform.position = glm::vec3{ 0, 0, 0 };
+
+		auto component = jc::ObjectFactory::Instance().Create<jc::MeshComponent>("MeshComponent");
+		component->program = engine.Get<jc::ResourceSystem>()->Get<jc::Program>("basic_shader");
+		component->vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexIndexBuffer>("cube_mesh");
+
+		actor->AddComponent(std::move(component));
+		scene->AddActor(std::move(actor));
 	}
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-	SDL_GL_SetSwapInterval(1);
-
-	SDL_GLContext context = SDL_GL_CreateContext(window);
-	if (!gladLoadGL())
-	{
-		SDL_Log("Failed to create OpenGL context");
-		exit(-1);
-	}
-
-	//set vertex shader
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
-	glCompileShader(vertexShader);
-
-
-	GLint status;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		char buffer[512];
-		glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
-		std::cout << buffer;
-	}
-
-	//set fragment shader
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-	glCompileShader(fragmentShader);
-
-	//GLint status;
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		char buffer[512];
-		glGetShaderInfoLog(fragmentShader, 512, NULL, buffer);
-		std::cout << buffer;
-	}
-
-	//create shader program 
-	GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, fragmentShader);
-	glAttachShader(shaderProgram, vertexShader);
-
-
-	//link ans use shader program
-	glLinkProgram(shaderProgram);
-	glGetShaderiv(shaderProgram, GL_LINK_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		char buffer[512];
-		glGetShaderInfoLog(shaderProgram, 512, NULL, buffer);
-		std::cout << buffer;
-	}
-
-	glUseProgram(shaderProgram);
-
-
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	//vertex arry
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-
-	//bind vertex buffer as active buffer (state)
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	//set the vertex data into the vertex buffer
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
-	glEnableVertexAttribArray(0);
-
-	//color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	//uniform
-	GLuint location = glGetUniformLocation(shaderProgram, "scale");
-	float time = 0;
-
-	GLuint tintLocation = glGetUniformLocation(shaderProgram, "tint");
-	glm::vec3 tint{ 1.0f, 0.15f, 0.15f };
-
+	glm::vec3 translate{ 0.0f };
+	float angle = 0;
 	bool quit = false;
 	while (!quit)
 	{
@@ -168,20 +134,30 @@ int main(int argc, char** argv)
 		}
 
 		SDL_PumpEvents();
-		time += 0.0001f;
-		
-		glUniform1f(location, std::sin(time));
-		glUniform3fv(tintLocation, 1, &tint[0]);
+		engine.Update();
+		scene->Update(engine.time.deltaTime);
 
-		glClearColor(0.85f, 0.85f, 0.85f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		// update actor
+		glm::vec3 direction{ 0 };
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_A) == jc::InputSystem::eKeyState::Held) direction.x = -1;
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_D) == jc::InputSystem::eKeyState::Held) direction.x = 1;
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_W) == jc::InputSystem::eKeyState::Held) direction.z = -1;
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_S) == jc::InputSystem::eKeyState::Held) direction.z = 1;
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_E) == jc::InputSystem::eKeyState::Held) direction.y = 1;
+		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_Q) == jc::InputSystem::eKeyState::Held) direction.y = -1;
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		auto actor = scene->FindActor("cube");
+		if (actor != nullptr)
+		{
+			actor->transform.position += direction * 5.0f * engine.time.deltaTime;
+			actor->transform.rotation.y += engine.time.deltaTime;
+		}
 
-		glEnd();
+		engine.Get<jc::Renderer>()->BeginFrame();
 
-		SDL_GL_SwapWindow(window);
+		scene->Draw(nullptr);
+
+		engine.Get<jc::Renderer>()->EndFrame();
 	}
-
 	return 0;
 }

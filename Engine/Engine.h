@@ -26,6 +26,12 @@
 #include "Object/Actor.h"
 #include "Object/Scene.h"
 
+//components
+#include "Component/CameraComponent.h"
+#include "Component/AudioComponent.h"
+#include "Component/GraphicsComponent.h"
+#include "Component/MeshComponent.h"
+#include "Component/physicsComponent.h"
 
 #include<vector>
 #include<memory>
@@ -36,6 +42,14 @@
 //graphics
 #include"Graphics/Renderer.h"
 #include"Graphics/Texture.h"
+#include"Graphics/Material.h"
+#include"Graphics/Program.h"
+#include"Graphics/Renderer.h"
+#include"Graphics/Shader.h"
+
+#include"Graphics/VertexBuffer.h"
+#include"Graphics/VertexIndexBuffer.h"
+
 
 
 #include "Resource/ResourceSystem.h"

@@ -32,7 +32,7 @@ namespace jc
 		std::for_each(actors.begin(), actors.end(), [renderer](auto& actor) {actor->Draw(renderer); });
 
 	}
-	void Scene::Addactor(std::unique_ptr<Actor> actor)
+	void Scene::AddActor(std::unique_ptr<Actor> actor)
 	{
 		actor->scene = this;
 		actor->Initialize();
@@ -89,7 +89,7 @@ namespace jc
 					}
 					else
 					{
-						Addactor(std::move(actor));
+						AddActor(std::move(actor));
 					}
 				}
 			}

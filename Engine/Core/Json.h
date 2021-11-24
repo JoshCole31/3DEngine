@@ -1,14 +1,12 @@
 #pragma once
 #include "document.h"
 #include <string>
-#include<vector>
+#include <vector>
 #include <fstream>
 #include "istreamwrapper.h"
 #include "MathTypes.h"
 
 #define JSON_READ(value,data)jc::json::Get(value, #data, data);
-
-
 
 namespace jc
 {
@@ -27,7 +25,6 @@ namespace jc
 
 		bool Get(const rapidjson::Value& value, const std::string& name, std::vector<std::string>& data);
 		bool Get(const rapidjson::Value& value, const std::string& name, std::vector<int>& data);
-
 
 	}
 }
