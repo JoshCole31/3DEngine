@@ -33,6 +33,9 @@
 #include "Component/MeshComponent.h"
 #include "Component/physicsComponent.h"
 
+#include "Component/FreeCameraController.h"
+
+
 #include<vector>
 #include<memory>
 #include<algorithm>
@@ -48,8 +51,6 @@
 #include"Graphics/Shader.h"
 
 #include"Graphics/VertexBuffer.h"
-#include"Graphics/VertexIndexBuffer.h"
-
 
 
 #include "Resource/ResourceSystem.h"

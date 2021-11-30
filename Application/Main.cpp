@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 	program->Use();
 
 	//vertex buffer
-	std::shared_ptr<jc::VertexIndexBuffer> vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexIndexBuffer>("cube_mesh");
+	std::shared_ptr<jc::VertexBuffer> vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexBuffer>("cube_mesh");
 	vertexBuffer->CreateVertexBuffer(sizeof(vertices), 8, (void*)vertices);
 	vertexBuffer->CreateIndexBuffer(GL_UNSIGNED_INT, 36, (void*)indices);
 	vertexBuffer->SetAttribute(0, 3, 8* sizeof(GL_FLOAT), 0);
@@ -92,10 +92,18 @@ int main(int argc, char** argv)
 		actor->name = "camera";
 		actor->transform.position = glm::vec3{ 0, 0, 10 };
 
-		auto component = jc::ObjectFactory::Instance().Create<jc::CameraComponent>("CameraComponent");
-		component->SetPerspective(45.0f, 800.0f / 600.0f, 0.01f, 100.0f);
+		{
+			auto component = jc::ObjectFactory::Instance().Create<jc::CameraComponent>("CameraComponent");
+			component->SetPerspective(45.0f, 800.0f / 600.0f, 0.01f, 100.0f);
+			actor->AddComponent(std::move(component));
+		}
+		{
+			auto component = jc::ObjectFactory::Instance().Create<jc::FreeCameraController>("FreeCameraController");
+			component->speed = 3;
+			component->sensitivity = 0.01f;
+			actor->AddComponent(std::move(component));	
+		}
 
-		actor->AddComponent(std::move(component));
 		scene->AddActor(std::move(actor));
 	}
 
@@ -107,7 +115,7 @@ int main(int argc, char** argv)
 
 		auto component = jc::ObjectFactory::Instance().Create<jc::MeshComponent>("MeshComponent");
 		component->program = engine.Get<jc::ResourceSystem>()->Get<jc::Program>("basic_shader");
-		component->vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexIndexBuffer>("cube_mesh");
+		component->vertexBuffer = engine.Get<jc::ResourceSystem>()->Get<jc::VertexBuffer>("cube_mesh");
 
 		actor->AddComponent(std::move(component));
 		scene->AddActor(std::move(actor));
@@ -138,18 +146,12 @@ int main(int argc, char** argv)
 		scene->Update(engine.time.deltaTime);
 
 		// update actor
-		glm::vec3 direction{ 0 };
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_A) == jc::InputSystem::eKeyState::Held) direction.x = -1;
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_D) == jc::InputSystem::eKeyState::Held) direction.x = 1;
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_W) == jc::InputSystem::eKeyState::Held) direction.z = -1;
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_S) == jc::InputSystem::eKeyState::Held) direction.z = 1;
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_E) == jc::InputSystem::eKeyState::Held) direction.y = 1;
-		if (engine.Get<jc::InputSystem>()->GetKeyState(SDL_SCANCODE_Q) == jc::InputSystem::eKeyState::Held) direction.y = -1;
+	
 
 		auto actor = scene->FindActor("cube");
 		if (actor != nullptr)
 		{
-			actor->transform.position += direction * 5.0f * engine.time.deltaTime;
+			//actor->transform.position += direction * 5.0f * engine.time.deltaTime;
 			actor->transform.rotation.y += engine.time.deltaTime;
 		}
 
