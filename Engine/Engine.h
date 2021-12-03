@@ -34,6 +34,8 @@
 #include "Component/physicsComponent.h"
 
 #include "Component/FreeCameraController.h"
+#include "Component/ModelComponent.h"
+#include "Component/LightComponent.h"
 
 
 #include<vector>
@@ -49,7 +51,6 @@
 #include"Graphics/Program.h"
 #include"Graphics/Renderer.h"
 #include"Graphics/Shader.h"
-
 #include"Graphics/VertexBuffer.h"
 
 

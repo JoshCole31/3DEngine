@@ -21,6 +21,8 @@ namespace jc
 		REDISTER_CLASS(physicsComponent)
 		REDISTER_CLASS(AudioComponent)
 		REDISTER_CLASS(FreeCameraController)
+		REDISTER_CLASS(ModelComponent)
+		REDISTER_CLASS(LightComponent)
 
 
 	}
