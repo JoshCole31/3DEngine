@@ -74,5 +74,20 @@
     <None Include="..\Build\Resources\scenes\main.scn">
       <Filter>Resource Files\scenes</Filter>
     </None>
+    <None Include="..\Build\Resources\shaders\phong_normal.shdr">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\Build\Resources\shaders\phong_normal.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\Build\Resources\shaders\phong_normal.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="..\Build\Resources\material\bricks.mtl">
+      <Filter>Resource Files\material</Filter>
+    </None>
+    <None Include="..\Build\Resources\material\ogre.mtl">
+      <Filter>Resource Files\material</Filter>
+    </None>
   </ItemGroup>
 </Project>
